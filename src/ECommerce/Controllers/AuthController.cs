@@ -23,9 +23,37 @@ namespace ECommerce.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserLoginDto model)
         {
-            var token = await _authService.LoginAsync(model);
-            if (token == null) return Unauthorized();
-            return Ok(new { token });
+            var response = await _authService.LoginAsync(model);
+            if (response == null)
+                return Unauthorized();
+            ToCookies(response);
+            return Ok(response);
+        }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh()
+        {
+            var token = Request.Cookies["refreshToken"];
+            var response = await _authService.RefreshTokenAsync(token);
+            if (response == null)
+                return Unauthorized();
+
+            if (!response.IsAuthenticated)
+                return NotFound(response);
+
+            ToCookies(response);
+            return Ok(response);
+        }
+        [HttpPost("revoke")]
+        public async Task<IActionResult> Revoke()
+        {
+            var token = Request.Cookies["refreshToken"];
+            var response = await _authService.RevokeTokenAsync(token);
+
+            if (response == null)
+                return NotFound(new AuthResponseDto { Message = "Token not found or already inactive." });
+
+            return Ok(response);
         }
 
         [Authorize(Roles = "Admin")]
@@ -35,6 +63,15 @@ namespace ECommerce.Controllers
             var result = await _authService.RegisterAsync(model, UserRole.Admin);
             if (!result.Succeeded) return BadRequest(result.Errors);
             return Ok();
+        }
+        private void ToCookies(AuthResponseDto response)
+        {
+            Response.Cookies.Append("refreshToken", response.RefreshToken!, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                Expires = response.RefreshTokenExpiration
+            });
         }
     }
 }

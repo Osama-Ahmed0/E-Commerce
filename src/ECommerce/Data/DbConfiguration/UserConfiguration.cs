@@ -22,5 +22,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.CreatedAt)
             .IsRequired()
             .HasDefaultValueSql("GETDATE()");
+
+        builder.OwnsMany(u => u.RefreshTokens, rt =>
+        {
+            rt.Property(r => r.Token).IsRequired().HasMaxLength(200);
+            rt.Property(r => r.CreatedOn).IsRequired();
+            rt.Property(r => r.ExpiresOn).IsRequired();
+            rt.Property(r => r.RevokedOn);
+        });
     }
 }

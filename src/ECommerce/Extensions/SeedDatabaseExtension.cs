@@ -52,6 +52,7 @@ namespace ECommerce.Extensions
                     FullName = configuration["AdminSeed:FullName"]!,
                     Email = adminEmail,
                     UserName = configuration["AdminSeed:UserName"]!,
+                    Role = UserRole.Admin,
                 };
                 await userManager.CreateAsync(admin, configuration["AdminSeed:Password"]!);
                 await userManager.AddToRoleAsync(admin, "Admin");

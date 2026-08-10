@@ -20,4 +20,6 @@ public class User : IdentityUser
     public List<Review> Reviews { get; set; } = new List<Review>();
 
     public List<Order> Orders { get; set; } = new List<Order>();
+
+    public List<RefreshToken>? RefreshTokens { get; set; } = new List<RefreshToken>();
 }
