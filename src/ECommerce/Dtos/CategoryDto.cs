@@ -3,7 +3,7 @@
     public class CategoryDto
     {
         public int Id { get; set; }
-        public string Name { get; set; } = null!;
+        public required string Name { get; set; } = null!;
         public int? ParentCategoryId { get; set; }
     }
 }

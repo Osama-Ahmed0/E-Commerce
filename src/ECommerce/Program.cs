@@ -1,3 +1,4 @@
+using ECommerce;
 using ECommerce.Configuration;
 using ECommerce.Data;
 using ECommerce.Data.Models;
@@ -41,6 +42,7 @@ var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? ne
 builder.Services.AddSingleton(jwtOptions);
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 builder.Services.AddAuthentication(options =>
     {
