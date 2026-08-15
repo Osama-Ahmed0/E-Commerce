@@ -1,4 +1,5 @@
 ﻿using ECommerce.Dtos;
+using ECommerce.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,6 +9,8 @@ namespace ECommerce.Controllers
     [ApiController]
     public class CategoryController(ICategoryService service) : ControllerBase
     {
+        private readonly ICategoryService service = service;
+
         [HttpGet]
         public async Task<IActionResult> GetCategories()
         {

@@ -1,6 +1,6 @@
 ﻿using ECommerce.Dtos;
 
-namespace ECommerce
+namespace ECommerce.Services
 {
     public interface ICategoryService
     {

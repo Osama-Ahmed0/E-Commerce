@@ -1,7 +1,6 @@
 using ECommerce.Data.Models;
 using ECommerce.Dtos;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
 
 namespace ECommerce.Services
 {

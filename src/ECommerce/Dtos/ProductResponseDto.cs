@@ -1,20 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace ECommerce.Dtos
+﻿namespace ECommerce.Dtos
 {
-    public class ProductDto
+    public class ProductResponseDto
     {
         public int Id { get; set; }
-
-        [Required, MaxLength(200)]
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
-
-        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than 0.")]
         public decimal Price { get; set; }
-
-        [Range(0, int.MaxValue)]
         public int Stock { get; set; }
         public int CategoryId { get; set; }
+        public string CategoryName { get; set; } = null!;
     }
 }

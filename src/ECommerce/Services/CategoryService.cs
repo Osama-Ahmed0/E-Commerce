@@ -2,7 +2,7 @@
 using ECommerce.Dtos;
 using Microsoft.EntityFrameworkCore;
 
-namespace ECommerce
+namespace ECommerce.Services
 {
     public class CategoryService(AppDbContext context) : ICategoryService
     {
