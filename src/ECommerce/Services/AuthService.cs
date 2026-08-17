@@ -56,7 +56,7 @@ namespace ECommerce.Services
             };
         }
 
-        public async Task<AuthResponseDto?> RefreshTokenAsync(string token)
+        public async Task<AuthResponseDto?> RefreshTokenAsync(string? token)
         {
             var user = await userManager.Users.FirstOrDefaultAsync(u => u.RefreshTokens!.Any(t => t.Token == token));
 
@@ -88,7 +88,7 @@ namespace ECommerce.Services
             };
         }
 
-        public async Task<AuthResponseDto?> RevokeTokenAsync(string token)
+        public async Task<AuthResponseDto?> RevokeTokenAsync(string? token)
         {
             var user = await userManager.Users.FirstOrDefaultAsync(u => u.RefreshTokens!.Any(t => t.Token == token));
             if (user == null)
@@ -109,7 +109,7 @@ namespace ECommerce.Services
 
             var claims = new List<Claim>
             {
-                new (JwtRegisteredClaimNames.Jti, user.Id),
+                new (JwtRegisteredClaimNames.Sub, user.Id),
                 new (JwtRegisteredClaimNames.UniqueName, user.UserName!),
                 new (JwtRegisteredClaimNames.Email, user.Email!),
                 new (ClaimTypes.Role, user.Role.ToString())
@@ -121,7 +121,7 @@ namespace ECommerce.Services
                 Audience = jwtOptions.Audience,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256),
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(jwtOptions.Lifetime),
+                Expires = DateTime.UtcNow.AddMinutes(jwtOptions.Lifetime)
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);

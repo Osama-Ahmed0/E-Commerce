@@ -8,7 +8,7 @@ namespace ECommerce.Services
     {
         Task<IdentityResult> RegisterAsync(RegisterDto model, UserRole role);
         Task<AuthResponseDto?> LoginAsync(UserLoginDto model);
-        Task<AuthResponseDto?> RefreshTokenAsync(string token);
-        Task<AuthResponseDto?> RevokeTokenAsync(string token);
+        Task<AuthResponseDto?> RefreshTokenAsync(string? token);
+        Task<AuthResponseDto?> RevokeTokenAsync(string? token);
     }
 }
