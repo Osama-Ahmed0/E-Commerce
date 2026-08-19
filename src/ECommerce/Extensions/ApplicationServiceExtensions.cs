@@ -1,4 +1,5 @@
-﻿using ECommerce.Services;
+﻿using ECommerce.Mapping;
+using ECommerce.Services;
 
 namespace ECommerce.Extensions
 {
@@ -10,6 +11,8 @@ namespace ECommerce.Extensions
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<ICartService, CartService>();
+            services.AddScoped<IOrderService, OrderService>();
+            services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
 
             return services;
         }
