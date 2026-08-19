@@ -1,22 +1,21 @@
-﻿using ECommerce.Data;
+﻿using AutoMapper;
+using ECommerce.Data;
+using ECommerce.Data.Models;
 using ECommerce.Dtos;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Services
 {
-    public class CategoryService(AppDbContext context) : ICategoryService
+    public class CategoryService(AppDbContext context, IMapper mapper) : ICategoryService
     {
+        private readonly AppDbContext context = context;
+        private readonly IMapper mapper = mapper;
+
         public async Task<IEnumerable<CategoryResponseDto>> GetCategoriesAsync()
         {
             var categories = await context.Categories
             .AsNoTracking()
-            .Select(c => new CategoryResponseDto
-            {
-                Id = c.Id,
-                Name = c.Name,
-                ParentCategoryId = c.ParentCategoryId,
-                ParentCategoryName = c.ParentCategory.Name
-            })
+            .Select(c => mapper.Map<CategoryResponseDto>(c))
             .ToListAsync();
             return categories;
         }
@@ -24,13 +23,7 @@ namespace ECommerce.Services
         {
             var category = await context.Categories
                 .AsNoTracking()
-                .Select(c => new CategoryResponseDto
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    ParentCategoryId = c.ParentCategoryId,
-                    ParentCategoryName = c.ParentCategory.Name
-                })
+                .Select(c => mapper.Map<CategoryResponseDto>(c))
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             return category;
@@ -57,11 +50,7 @@ namespace ECommerce.Services
                 }
             }
 
-            var category = new Data.Models.Category
-            {
-                Name = dto.Name,
-                ParentCategoryId = dto.ParentCategoryId
-            };
+            var category = mapper.Map<Category>(dto);
 
             await context.Categories.AddAsync(category);
 
@@ -94,9 +83,7 @@ namespace ECommerce.Services
                     return false;
             }
 
-            category.Name = dto.Name;
-            category.ParentCategoryId = dto.ParentCategoryId;
-
+            mapper.Map(dto, category);
             await context.SaveChangesAsync();
 
             return true;

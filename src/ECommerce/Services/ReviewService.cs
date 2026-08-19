@@ -1,4 +1,5 @@
-﻿using ECommerce.Common;
+﻿using AutoMapper;
+using ECommerce.Common;
 using ECommerce.Data;
 using ECommerce.Data.Models;
 using ECommerce.Dtos;
@@ -6,16 +7,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Services
 {
-    public class ReviewService(AppDbContext context) : IReviewService
+    public class ReviewService(AppDbContext context, IMapper mapper) : IReviewService
     {
         private readonly AppDbContext context = context;
+        private readonly IMapper mapper = mapper;
 
         public async Task<PagedResult<ReviewDto>> GetReviewsAsync(int productId, int pageNumber, int pageSize)
         {
             int validPageNumber = pageNumber > 0 ? pageNumber : 1;
             int validPageSize = pageSize > 0 ? Math.Min(pageSize, 100) : 10;
 
-            var query = context.Set<Review>()
+            var query = context.Reviews
                 .AsNoTracking()
                 .Where(r => r.ProductId == productId)
                 .Include(r => r.User)
@@ -26,14 +28,7 @@ namespace ECommerce.Services
             var items = await query
                 .Skip((validPageNumber - 1) * validPageSize)
                 .Take(validPageSize)
-                .Select(r => new ReviewDto
-                {
-                    Id = r.Id,
-                    UserName = r.User.FullName ?? r.User.UserName!,
-                    Rating = r.Rating,
-                    Comment = r.Comment,
-                    CreatedAt = r.CreatedAt
-                })
+                .Select(r => mapper.Map<ReviewDto>(r))
                 .ToListAsync();
 
             return new PagedResult<ReviewDto>
@@ -62,7 +57,7 @@ namespace ECommerce.Services
             if (user == null)
                 return ServiceResult<WriteReviewDto>.Fail("User not found", ServiceErrorType.NotFound);
 
-            var already = await context.Set<Review>().AnyAsync(r => r.ProductId == productId && r.UserId == userId);
+            var already = await context.Reviews.AnyAsync(r => r.ProductId == productId && r.UserId == userId);
             if (already)
                 return ServiceResult<WriteReviewDto>.Fail("User has already reviewed this product", ServiceErrorType.Conflict);
 
@@ -75,7 +70,7 @@ namespace ECommerce.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            context.Set<Review>().Add(review);
+            context.Reviews.Add(review);
             try
             {
                 await context.SaveChangesAsync();

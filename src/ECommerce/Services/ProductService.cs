@@ -1,4 +1,6 @@
-﻿using ECommerce.Common;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using ECommerce.Common;
 using ECommerce.Data;
 using ECommerce.Data.Models;
 using ECommerce.Dtos;
@@ -6,9 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Services
 {
-    public class ProductService(AppDbContext context) : IProductService
+    public class ProductService(AppDbContext context, IMapper mapper) : IProductService
     {
         private readonly AppDbContext context = context;
+        private readonly IMapper mapper = mapper;
 
         public async Task<PagedResult<ProductResponseDto>> GetProductsAsync(int? categoryId, decimal? minPrice,
             decimal? maxPrice, string? sort, int? pageNumber, int? pageSize)
@@ -37,16 +40,10 @@ namespace ECommerce.Services
             var totalCount = await query.CountAsync();
 
             var products = await query
+                .ProjectTo<ProductResponseDto>(mapper.ConfigurationProvider)
                 .Skip((validPageNumber - 1) * validPageSize)
                 .Take(validPageSize)
-                .Select(p => new ProductResponseDto
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Price = p.Price,
-                    CategoryId = p.CategoryId,
-                    CategoryName = p.Category.Name
-                }).ToListAsync();
+                .ToListAsync();
 
             return new PagedResult<ProductResponseDto>
             {
@@ -66,16 +63,7 @@ namespace ECommerce.Services
             if (product == null)
                 return ServiceResult<ProductResponseDto>.Fail("Product not found", ServiceErrorType.NotFound);
 
-            return ServiceResult<ProductResponseDto>.Ok(new ProductResponseDto
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                Stock = product.Stock,
-                CategoryId = product.CategoryId,
-                CategoryName = product.Category.Name
-            });
+            return ServiceResult<ProductResponseDto>.Ok(mapper.Map<ProductResponseDto>(product));
         }
 
         public async Task<ServiceResult<ProductResponseDto>> CreateProductAsync(ProductDto dto)
@@ -84,40 +72,27 @@ namespace ECommerce.Services
             if (category == null)
                 return ServiceResult<ProductResponseDto>.Fail("Category not found", ServiceErrorType.NotFound);
 
-            var product = new Product
-            {
-                Name = dto.Name.Trim(),
-                Description = dto.Description?.Trim() ?? string.Empty,
-                Price = dto.Price,
-                Stock = dto.Stock,
-                CategoryId = dto.CategoryId
-            };
+            var product = mapper.Map<Product>(dto);
 
             context.Products.Add(product);
             await context.SaveChangesAsync();
 
-            return ServiceResult<ProductResponseDto>.Ok(new ProductResponseDto
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                Stock = product.Stock,
-                CategoryId = product.CategoryId,
-                CategoryName = category.Name
-            });
+            product.Category = category;
+            return ServiceResult<ProductResponseDto>.Ok(mapper.Map<ProductResponseDto>(product));
         }
 
         public async Task<ServiceResult<ProductResponseDto>> UpdateProductAsync(int id, ProductDto dto)
         {
-            if (dto == null)
-                return ServiceResult<ProductResponseDto>.Fail("Invalid product data", ServiceErrorType.BadRequest);
-
             var product = await context.Products
                 .Include(p => p.Category)
                 .FirstOrDefaultAsync(p => p.Id == id);
+
             if (product == null)
                 return ServiceResult<ProductResponseDto>.Fail("Product not found", ServiceErrorType.NotFound);
+
+            if (dto == null)
+                return ServiceResult<ProductResponseDto>.Fail("Invalid product data", ServiceErrorType.BadRequest);
+
 
             if (dto.CategoryId != product.CategoryId)
             {
@@ -126,24 +101,11 @@ namespace ECommerce.Services
                     return ServiceResult<ProductResponseDto>.Fail("Category not found", ServiceErrorType.NotFound);
             }
 
-            product.Name = dto.Name;
-            product.Description = dto.Description ?? string.Empty;
-            product.Price = dto.Price;
-            product.Stock = dto.Stock;
-            product.CategoryId = dto.CategoryId;
+            mapper.Map(dto, product);
 
             await context.SaveChangesAsync();
 
-            return ServiceResult<ProductResponseDto>.Ok(new ProductResponseDto
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                Stock = product.Stock,
-                CategoryId = product.CategoryId,
-                CategoryName = product.Category.Name
-            });
+            return ServiceResult<ProductResponseDto>.Ok(mapper.Map<ProductResponseDto>(product));
         }
 
         public async Task<ServiceResult<bool>> DeleteProductAsync(int id)

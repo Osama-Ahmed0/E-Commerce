@@ -1,3 +1,4 @@
+using AutoMapper;
 using ECommerce.Common;
 using ECommerce.Data;
 using ECommerce.Data.Models;
@@ -6,9 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Services;
 
-public class CartService(AppDbContext context) : ICartService
+public class CartService(AppDbContext context, IMapper mapper) : ICartService
 {
     private readonly AppDbContext context = context;
+    private readonly IMapper mapper = mapper;
 
     public async Task<ServiceResult<List<CartItemDto>>> GetCartItemsAsync(string userId)
     {
@@ -27,11 +29,7 @@ public class CartService(AppDbContext context) : ICartService
             await context.SaveChangesAsync();
         }
 
-        var items = cart.CartItems.Select(ci => new CartItemDto
-        {
-            ProductId = ci.ProductId,
-            Quantity = ci.Quantity
-        }).ToList();
+        var items = mapper.Map<List<CartItemDto>>(cart.CartItems);
 
         return ServiceResult<List<CartItemDto>>.Ok(items);
     }
@@ -75,11 +73,7 @@ public class CartService(AppDbContext context) : ICartService
 
         await context.SaveChangesAsync();
 
-        var items = cart.CartItems.Select(ci => new CartItemDto
-        {
-            ProductId = ci.ProductId,
-            Quantity = ci.Quantity
-        }).ToList();
+        var items = mapper.Map<List<CartItemDto>>(cart.CartItems);
 
         return ServiceResult<List<CartItemDto>>.Ok(items);
     }
@@ -111,11 +105,7 @@ public class CartService(AppDbContext context) : ICartService
         cartItem.Quantity = quantity;
         await context.SaveChangesAsync();
 
-        return ServiceResult<CartItemDto>.Ok(new CartItemDto
-        {
-            ProductId = cartItem.ProductId,
-            Quantity = cartItem.Quantity
-        });
+        return ServiceResult<CartItemDto>.Ok(mapper.Map<CartItemDto>(cartItem));
     }
 
     public async Task<ServiceResult<bool>> ClearCartAsync(string userId)
