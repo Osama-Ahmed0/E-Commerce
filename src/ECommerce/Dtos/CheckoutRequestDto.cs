@@ -2,6 +2,6 @@
 {
     public class CheckoutRequestDto
     {
-        public required string ShippingAddress { get; set; } = null!;
+        public required string ShippingAddress { get; set; }
     }
 }

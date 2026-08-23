@@ -70,7 +70,8 @@ namespace ECommerce.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                Expires = response.RefreshTokenExpiration
+                Expires = response.RefreshTokenExpiration,
+                SameSite = SameSiteMode.Strict
             });
         }
     }

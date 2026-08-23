@@ -23,7 +23,7 @@ namespace ECommerce.Controllers
             if (userId == null)
                 return Unauthorized();
 
-            var result = await service.CreateOrder(userId, request.ShippingAddress);
+            var result = await service.CreateOrderAsync(userId, request.ShippingAddress);
             if (!result.Success)
                 return result.ToActionResult(this);
             return CreatedAtAction(nameof(GetOrder), new { id = result.Data!.Id }, result.Data);
@@ -41,9 +41,9 @@ namespace ECommerce.Controllers
                 return Unauthorized();
 
             if (userRole == "Customer")
-                result = await service.GetOrders(userId);
+                result = await service.GetOrdersAsync(userId);
             else if (userRole == "Admin")
-                result = await service.GetOrders();
+                result = await service.GetOrdersAsync();
             else
                 return Forbid();
 
@@ -54,7 +54,7 @@ namespace ECommerce.Controllers
         [Authorize]
         public async Task<IActionResult> GetOrder(int id)
         {
-            var result = await service.GetOrderById(id);
+            var result = await service.GetOrderByIdAsync(id);
             return result.ToActionResult(this);
         }
 
@@ -62,7 +62,7 @@ namespace ECommerce.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] string status)
         {
-            var result = await service.UpdateOrderStatus(id, status);
+            var result = await service.UpdateOrderStatusAsync(id, status);
             return result.ToActionResult(this);
         }
 
@@ -70,7 +70,7 @@ namespace ECommerce.Controllers
         [Authorize]
         public async Task<IActionResult> CancelOrder(int id)
         {
-            var result = await service.CancelOrder(id);
+            var result = await service.CancelOrderAsync(id);
             return result.ToActionResult(this);
         }
     }

@@ -14,8 +14,7 @@ namespace ECommerce.Services
 
         public async Task<PagedResult<CategoryResponseDto>> GetCategoriesAsync(int? pageNumber, int? pageSize)
         {
-            int validPageNumber = pageNumber.GetValueOrDefault(1);
-            int validPageSize = pageSize.GetValueOrDefault(10);
+            var (validPageNumber, validPageSize) = PaginationHelper.Normalize(pageNumber, pageSize);
 
             var totalCount = await context.Categories.CountAsync();
 

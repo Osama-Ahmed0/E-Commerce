@@ -34,8 +34,7 @@ namespace ECommerce.Services
                 _ => query.OrderBy(p => p.Price)
             };
 
-            int validPageNumber = pageNumber.HasValue && pageNumber.Value > 0 ? pageNumber.Value : 1;
-            int validPageSize = pageSize.HasValue && pageSize.Value > 0 ? Math.Min(pageSize.Value, 100) : 20;
+            var (validPageNumber, validPageSize) = PaginationHelper.Normalize(pageNumber, pageSize, defaultPageSize: 20);
 
             var totalCount = await query.CountAsync();
 

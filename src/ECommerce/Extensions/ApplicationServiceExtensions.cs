@@ -12,6 +12,7 @@ namespace ECommerce.Extensions
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IOrderService, OrderService>();
+            services.AddScoped<IReviewService, ReviewService>();
             services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
 
             return services;

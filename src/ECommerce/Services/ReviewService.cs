@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using ECommerce.Common;
 using ECommerce.Data;
 using ECommerce.Data.Models;
@@ -14,8 +15,7 @@ namespace ECommerce.Services
 
         public async Task<PagedResult<ReviewDto>> GetReviewsAsync(int productId, int? pageNumber, int? pageSize)
         {
-            int validPageNumber = pageNumber.GetValueOrDefault(1);
-            int validPageSize = pageSize.GetValueOrDefault(10);
+            var (validPageNumber, validPageSize) = PaginationHelper.Normalize(pageNumber, pageSize);
 
             var query = context.Reviews
                 .AsNoTracking()
@@ -26,9 +26,9 @@ namespace ECommerce.Services
             var totalCount = await query.CountAsync();
 
             var items = await query
+                .ProjectTo<ReviewDto>(mapper.ConfigurationProvider)
                 .Skip((validPageNumber - 1) * validPageSize)
                 .Take(validPageSize)
-                .Select(r => mapper.Map<ReviewDto>(r))
                 .ToListAsync();
 
             return new PagedResult<ReviewDto>
@@ -41,30 +41,27 @@ namespace ECommerce.Services
             };
         }
 
-        public async Task<ServiceResult<WriteReviewDto>> CreateReviewAsync(int productId, string userId, WriteReviewDto Dto)
+        public async Task<ServiceResult<ReviewDto>> CreateReviewAsync(int productId, string userId, WriteReviewDto Dto)
         {
             if (Dto == null)
-                return ServiceResult<WriteReviewDto>.Fail("Invalid review data", ServiceErrorType.BadRequest);
-
-            if (Dto.Rating < 1 || Dto.Rating > 5)
-                return ServiceResult<WriteReviewDto>.Fail("Rating must be between 1 and 5", ServiceErrorType.Validation);
+                return ServiceResult<ReviewDto>.Fail("Invalid review data", ServiceErrorType.BadRequest);
 
             var product = await context.Products.FindAsync(productId);
             if (product == null)
-                return ServiceResult<WriteReviewDto>.Fail("Product not found", ServiceErrorType.NotFound);
+                return ServiceResult<ReviewDto>.Fail("Product not found", ServiceErrorType.NotFound);
 
             var user = await context.Users.FindAsync(userId);
             if (user == null)
-                return ServiceResult<WriteReviewDto>.Fail("User not found", ServiceErrorType.NotFound);
+                return ServiceResult<ReviewDto>.Fail("User not found", ServiceErrorType.NotFound);
 
             var already = await context.Reviews.AnyAsync(r => r.ProductId == productId && r.UserId == userId);
             if (already)
-                return ServiceResult<WriteReviewDto>.Fail("User has already reviewed this product", ServiceErrorType.Conflict);
+                return ServiceResult<ReviewDto>.Fail("User has already reviewed this product", ServiceErrorType.Conflict);
 
             var review = new Review
             {
                 Rating = Dto.Rating,
-                Comment = Dto.Comment?.Trim() ?? string.Empty,
+                Comment = Dto.Comment,
                 ProductId = productId,
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow
@@ -77,10 +74,14 @@ namespace ECommerce.Services
             }
             catch (DbUpdateException)
             {
-                return ServiceResult<WriteReviewDto>.Fail("Could not create review.", ServiceErrorType.Conflict);
+                return ServiceResult<ReviewDto>.Fail("Could not create review.", ServiceErrorType.Conflict);
             }
 
-            return ServiceResult<WriteReviewDto>.Ok(new WriteReviewDto { Rating = review.Rating, Comment = review.Comment });
+            review.User = user;
+
+            var dto = mapper.Map<ReviewDto>(review);
+
+            return ServiceResult<ReviewDto>.Ok(dto);
         }
     }
 }

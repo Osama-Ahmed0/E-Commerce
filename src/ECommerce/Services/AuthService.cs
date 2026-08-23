@@ -41,6 +41,7 @@ namespace ECommerce.Services
             var accessToken = await GenerateJwtTokenAsync(user);
             var refreshToken = GenerateRefreshToken();
 
+            PruneRefreshTokens(user);
             user.RefreshTokens?.Add(refreshToken);
             await userManager.UpdateAsync(user);
 
@@ -73,6 +74,7 @@ namespace ECommerce.Services
 
             refreshToken.RevokedOn = DateTime.UtcNow;
 
+            PruneRefreshTokens(user);
             user.RefreshTokens?.Add(newRefreshToken);
             await userManager.UpdateAsync(user);
 
@@ -139,6 +141,13 @@ namespace ECommerce.Services
                 CreatedOn = DateTime.UtcNow,
                 ExpiresOn = DateTime.UtcNow.AddDays(7)
             };
+        }
+        private static void PruneRefreshTokens(User user)
+        {
+            if (user.RefreshTokens == null) return;
+
+            var cutoff = DateTime.UtcNow.AddDays(-7);
+            user.RefreshTokens.RemoveAll(t => !t.IsActive && (t.RevokedOn ?? t.ExpiresOn) < cutoff);
         }
     }
 }

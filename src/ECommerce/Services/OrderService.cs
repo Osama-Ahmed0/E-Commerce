@@ -12,7 +12,7 @@ namespace ECommerce.Services
         private readonly AppDbContext context = context;
         private readonly IMapper mapper = mapper;
 
-        public async Task<ServiceResult<OrderDto>> CreateOrder(string userId, string shippingAddress)
+        public async Task<ServiceResult<OrderDto>> CreateOrderAsync(string userId, string shippingAddress)
         {
             if (string.IsNullOrWhiteSpace(userId))
                 return ServiceResult<OrderDto>.Fail("User id is required.", ServiceErrorType.Validation);
@@ -77,7 +77,7 @@ namespace ECommerce.Services
             return ServiceResult<OrderDto>.Ok(dto);
         }
 
-        public async Task<ServiceResult<List<OrderDto>>> GetOrders(string userId)
+        public async Task<ServiceResult<List<OrderDto>>> GetOrdersAsync(string userId)
         {
             if (string.IsNullOrWhiteSpace(userId))
                 return ServiceResult<List<OrderDto>>.Fail("User id is required.", ServiceErrorType.Validation);
@@ -93,7 +93,7 @@ namespace ECommerce.Services
             return ServiceResult<List<OrderDto>>.Ok(dtos);
         }
 
-        public async Task<ServiceResult<List<OrderDto>>> GetOrders()
+        public async Task<ServiceResult<List<OrderDto>>> GetOrdersAsync()
         {
             var orders = await context.Orders
                 .Include(o => o.OrderItems)
@@ -105,7 +105,7 @@ namespace ECommerce.Services
             return ServiceResult<List<OrderDto>>.Ok(dtos);
         }
 
-        public async Task<ServiceResult<OrderDto>> GetOrderById(int orderId)
+        public async Task<ServiceResult<OrderDto>> GetOrderByIdAsync(int orderId)
         {
             var order = await context.Orders
                 .Include(o => o.OrderItems)
@@ -118,7 +118,7 @@ namespace ECommerce.Services
             return ServiceResult<OrderDto>.Ok(mapper.Map<OrderDto>(order));
         }
 
-        public async Task<ServiceResult<OrderDto>> UpdateOrderStatus(int orderId, string status)
+        public async Task<ServiceResult<OrderDto>> UpdateOrderStatusAsync(int orderId, string status)
         {
             if (string.IsNullOrWhiteSpace(status))
                 return ServiceResult<OrderDto>.Fail("Status is required.", ServiceErrorType.Validation);
@@ -165,7 +165,7 @@ namespace ECommerce.Services
             return ServiceResult<OrderDto>.Ok(mapper.Map<OrderDto>(reloaded!));
         }
 
-        public async Task<ServiceResult<bool>> CancelOrder(int orderId)
+        public async Task<ServiceResult<bool>> CancelOrderAsync(int orderId)
         {
             var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
             if (order == null)
