@@ -7,7 +7,7 @@ namespace ECommerce.Dtos
         public int Id { get; set; }
 
         [Required, MaxLength(100)]
-        public required string Name { get; set; } = null!;
+        public string Name { get; set; } = null!;
 
         [Range(1, int.MaxValue)]
         public int? ParentCategoryId { get; set; }

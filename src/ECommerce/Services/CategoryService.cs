@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using ECommerce.Common;
 using ECommerce.Data;
 using ECommerce.Data.Models;
@@ -19,8 +20,8 @@ namespace ECommerce.Services
             var totalCount = await context.Categories.CountAsync();
 
             var items = await context.Categories
+            .ProjectTo<CategoryResponseDto>(mapper.ConfigurationProvider)
             .AsNoTracking()
-            .Select(c => mapper.Map<CategoryResponseDto>(c))
             .Skip((validPageNumber - 1) * validPageSize)
             .Take(validPageSize)
             .ToListAsync();
@@ -38,7 +39,7 @@ namespace ECommerce.Services
         {
             var category = await context.Categories
                 .AsNoTracking()
-                .Select(c => mapper.Map<CategoryResponseDto>(c))
+                .ProjectTo<CategoryResponseDto>(mapper.ConfigurationProvider)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             return ServiceResult<CategoryResponseDto?>.Ok(category);

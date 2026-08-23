@@ -4,7 +4,6 @@ using ECommerce.Extensions;
 using ECommerce.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace ECommerce.Controllers
 {
@@ -34,7 +33,7 @@ namespace ECommerce.Controllers
         public async Task<IActionResult> GetOrders()
         {
             ServiceResult<List<OrderDto>> result;
-            var userRole = User.FindFirstValue(ClaimTypes.Role);
+            var userRole = User.GetRole();
             var userId = User.GetUserId();
 
             if (userId == null)
@@ -60,9 +59,9 @@ namespace ECommerce.Controllers
 
         [HttpPut("{id}/status")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] string status)
+        public async Task<IActionResult> UpdateOrderStatus(int id, UpdateOrderStatusDto dto)
         {
-            var result = await service.UpdateOrderStatusAsync(id, status);
+            var result = await service.UpdateOrderStatusAsync(id, dto.OrderStatus);
             return result.ToActionResult(this);
         }
 

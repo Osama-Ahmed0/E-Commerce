@@ -67,10 +67,20 @@ namespace ECommerce.Services
                 await context.SaveChangesAsync();
                 await tx.CommitAsync();
             }
-            catch
+            catch (DbUpdateConcurrencyException)
+            {
+                await tx.RollbackAsync();
+                return ServiceResult<OrderDto>.Fail("The cart or product stock changed while placing your order. Please try again.", ServiceErrorType.Conflict);
+            }
+            catch (DbUpdateException)
             {
                 await tx.RollbackAsync();
                 return ServiceResult<OrderDto>.Fail("Could not create order.", ServiceErrorType.BadRequest);
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
             }
 
             var dto = mapper.Map<OrderDto>(order);
@@ -82,12 +92,7 @@ namespace ECommerce.Services
             if (string.IsNullOrWhiteSpace(userId))
                 return ServiceResult<List<OrderDto>>.Fail("User id is required.", ServiceErrorType.Validation);
 
-            var orders = await context.Orders
-                .Where(o => o.UserId == userId)
-                .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
+            var orders = await OrdersWithItems(userId).ToListAsync();
 
             var dtos = orders.Select(mapper.Map<OrderDto>).ToList();
             return ServiceResult<List<OrderDto>>.Ok(dtos);
@@ -95,11 +100,7 @@ namespace ECommerce.Services
 
         public async Task<ServiceResult<List<OrderDto>>> GetOrdersAsync()
         {
-            var orders = await context.Orders
-                .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
+            var orders = await OrdersWithItems().ToListAsync();
 
             var dtos = orders.Select(mapper.Map<OrderDto>).ToList();
             return ServiceResult<List<OrderDto>>.Ok(dtos);
@@ -177,6 +178,19 @@ namespace ECommerce.Services
             order.Status = OrderStatus.Cancelled;
             await context.SaveChangesAsync();
             return ServiceResult<bool>.Ok(true);
+        }
+        private IQueryable<Order> OrdersWithItems(string? userId = null)
+        {
+            var query = context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                .AsQueryable();
+
+            if (userId != null)
+                query = query.Where(o => o.UserId == userId);
+
+            query = query.OrderByDescending(o => o.OrderDate);
+            return query;
         }
     }
 }
