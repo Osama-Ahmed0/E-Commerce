@@ -9,7 +9,8 @@ namespace ECommerce.Extensions
     {
         public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
         {
-            var jwtOptions = configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
+            var jwtOptions = configuration.GetSection("Jwt").Get<JwtOptions>() ??
+                throw new InvalidOperationException("JWT options are not configured.");
             services.AddSingleton(jwtOptions);
 
             services.AddAuthentication(options =>

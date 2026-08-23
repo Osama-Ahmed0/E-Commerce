@@ -12,10 +12,10 @@ namespace ECommerce.Services
         private readonly AppDbContext context = context;
         private readonly IMapper mapper = mapper;
 
-        public async Task<PagedResult<ReviewDto>> GetReviewsAsync(int productId, int pageNumber, int pageSize)
+        public async Task<PagedResult<ReviewDto>> GetReviewsAsync(int productId, int? pageNumber, int? pageSize)
         {
-            int validPageNumber = pageNumber > 0 ? pageNumber : 1;
-            int validPageSize = pageSize > 0 ? Math.Min(pageSize, 100) : 10;
+            int validPageNumber = pageNumber.GetValueOrDefault(1);
+            int validPageSize = pageSize.GetValueOrDefault(10);
 
             var query = context.Reviews
                 .AsNoTracking()

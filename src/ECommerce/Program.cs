@@ -1,4 +1,5 @@
 using ECommerce.Extensions;
+using ECommerce.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,7 @@ builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
 
 app.UseHttpsRedirection();
 

@@ -1,4 +1,5 @@
 ﻿using ECommerce.Dtos;
+using ECommerce.Extensions;
 using ECommerce.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,20 +13,17 @@ namespace ECommerce.Controllers
         private readonly ICategoryService service = service;
 
         [HttpGet]
-        public async Task<IActionResult> GetCategories()
+        public async Task<IActionResult> GetCategories(int? pageNumber, int? pageSize)
         {
-            var categories = await service.GetCategoriesAsync();
+            var categories = await service.GetCategoriesAsync(pageNumber, pageSize);
             return Ok(categories);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetCategory(int id)
+        public async Task<IActionResult> GetCategoryById(int id)
         {
-            var category = await service.GetCategoryByIdAsync(id);
-            if (category == null)
-                return NotFound($"Category with ID {id} was not found.");
-
-            return Ok(category);
+            var result = await service.GetCategoryByIdAsync(id);
+            return result.ToActionResult(this);
         }
 
         [Authorize(Roles = "Admin")]
@@ -33,31 +31,26 @@ namespace ECommerce.Controllers
         public async Task<IActionResult> CreateCategory(CategoryDto dto)
         {
             var result = await service.CreateCategoryAsync(dto);
-            if (!result)
-                return BadRequest("Failed to create category.");
+            if (!result.Success)
+                return result.ToActionResult(this);
 
-            return Created($"api/categories/{dto.Name}", dto);
+            return CreatedAtAction(nameof(GetCategoryById), new { id = result.Data?.Id }, result.Data);
         }
 
         [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateCategory(int id, CategoryDto dto)
+        public async Task<IActionResult> UpdateCategory(int id, CategoryDto dto)
         {
             var result = await service.UpdateCategoryAsync(id, dto);
-            if (!result)
-                return BadRequest("Failed to update category.");
-
-            return Ok(result);
+            return result.ToActionResult(this);
         }
 
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteCategory(int id)
+        public async Task<IActionResult> DeleteCategory(int id)
         {
             var result = await service.DeleteCategoryAsync(id);
-            if (!result)
-                return BadRequest("Failed to delete category.");
-            return Ok(result);
+            return result.ToActionResult(this);
         }
     }
 }

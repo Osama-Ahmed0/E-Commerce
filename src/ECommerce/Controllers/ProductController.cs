@@ -1,5 +1,5 @@
-﻿using ECommerce.Common;
-using ECommerce.Dtos;
+﻿using ECommerce.Dtos;
+using ECommerce.Extensions;
 using ECommerce.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,12 +25,7 @@ namespace ECommerce.Controllers
         public async Task<IActionResult> GetProductById(int id)
         {
             var result = await service.GetProductByIdAsync(id);
-            if (!result.Success)
-                return result.ErrorType == ServiceErrorType.NotFound ?
-                    NotFound(result.ErrorMessage) :
-                    BadRequest(result.ErrorMessage);
-
-            return Ok(result.Data);
+            return result.ToActionResult(this);
         }
 
         [Authorize(Roles = "Admin")]
@@ -39,7 +34,7 @@ namespace ECommerce.Controllers
         {
             var result = await service.CreateProductAsync(productDto);
             if (!result.Success)
-                return NotFound(result.ErrorMessage);
+                return result.ToActionResult(this);
 
             return CreatedAtAction(nameof(GetProductById), new { id = result.Data?.Id }, result.Data);
         }
@@ -49,12 +44,7 @@ namespace ECommerce.Controllers
         public async Task<IActionResult> UpdateProduct(int id, ProductDto productDto)
         {
             var result = await service.UpdateProductAsync(id, productDto);
-            if (!result.Success)
-                return result.ErrorType == ServiceErrorType.NotFound ?
-                    NotFound(result.ErrorMessage) :
-                    BadRequest(result.ErrorMessage);
-
-            return Ok(result.Data);
+            return result.ToActionResult(this);
         }
 
         [Authorize(Roles = "Admin")]
@@ -62,9 +52,7 @@ namespace ECommerce.Controllers
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var result = await service.DeleteProductAsync(id);
-            if (!result.Success)
-                return NotFound(result.ErrorMessage);
-            return Ok();
+            return result.ToActionResult(this);
         }
     }
 }
