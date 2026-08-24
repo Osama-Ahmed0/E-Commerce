@@ -3,20 +3,19 @@ using ECommerce.Common;
 using ECommerce.Data;
 using ECommerce.Data.Models;
 using ECommerce.Dtos;
+using ECommerce.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Services;
 
-public class CartService(AppDbContext context, IMapper mapper) : ICartService
+public class CartService(AppDbContext context, IMapper mapper, ICartValidator validator) : ICartService
 {
     private readonly AppDbContext context = context;
     private readonly IMapper mapper = mapper;
+    private readonly ICartValidator validator = validator;
 
     public async Task<ServiceResult<List<CartItemDto>>> GetCartItemsAsync(string userId)
     {
-        if (string.IsNullOrWhiteSpace(userId))
-            return ServiceResult<List<CartItemDto>>.Fail("Invalid user", ServiceErrorType.BadRequest);
-
         var cart = await context.Carts
             .Include(c => c.CartItems)
             .ThenInclude(ci => ci.Product)
@@ -36,18 +35,9 @@ public class CartService(AppDbContext context, IMapper mapper) : ICartService
 
     public async Task<ServiceResult<List<CartItemDto>>> AddToCartAsync(string userId, CartItemDto dto)
     {
-        if (string.IsNullOrWhiteSpace(userId) || dto == null)
-            return ServiceResult<List<CartItemDto>>.Fail("Invalid data", ServiceErrorType.BadRequest);
-
-        if (dto.Quantity <= 0)
-            return ServiceResult<List<CartItemDto>>.Fail("Quantity must be greater than zero", ServiceErrorType.Validation);
-
-        var productExists = await context.Products.FindAsync(dto.ProductId);
-        if (productExists == null)
-            return ServiceResult<List<CartItemDto>>.Fail($"Product {dto.ProductId} not found.", ServiceErrorType.NotFound);
-
-        if (dto.Quantity > productExists.Stock)
-            return ServiceResult<List<CartItemDto>>.Fail($"Quantity exceeds available stock for product {dto.ProductId}.", ServiceErrorType.Validation);
+        var validation = await validator.ValidateForAddAsync(dto);
+        if (!validation.IsValid)
+            return ServiceResult<List<CartItemDto>>.Fail(validation.ErrorMessage!, validation.ErrorType);
 
         var cart = await context.Carts
             .Include(c => c.CartItems)
@@ -65,11 +55,7 @@ public class CartService(AppDbContext context, IMapper mapper) : ICartService
             existing.Quantity += dto.Quantity;
 
         else
-            cart.CartItems.Add(new CartItem
-            {
-                ProductId = dto.ProductId,
-                Quantity = dto.Quantity
-            });
+            cart.CartItems.Add(mapper.Map<CartItem>(dto));
 
         await context.SaveChangesAsync();
 
@@ -80,11 +66,9 @@ public class CartService(AppDbContext context, IMapper mapper) : ICartService
 
     public async Task<ServiceResult<CartItemDto>> UpdateCartItemAsync(string userId, int productId, int quantity)
     {
-        if (string.IsNullOrWhiteSpace(userId))
-            return ServiceResult<CartItemDto>.Fail("Invalid user", ServiceErrorType.BadRequest);
-
-        if (quantity <= 0)
-            return ServiceResult<CartItemDto>.Fail("Quantity must be greater than zero", ServiceErrorType.Validation);
+        var validation = await validator.ValidateForUpdateAsync(productId, quantity);
+        if (!validation.IsValid)
+            return ServiceResult<CartItemDto>.Fail(validation.ErrorMessage!, validation.ErrorType);
 
         var cart = await context.Carts
             .Include(c => c.CartItems)
@@ -97,11 +81,6 @@ public class CartService(AppDbContext context, IMapper mapper) : ICartService
         if (cartItem == null)
             return ServiceResult<CartItemDto>.Fail("Item not found in cart.", ServiceErrorType.NotFound);
 
-        var product = await context.Products.FindAsync(productId);
-
-        if (product?.Stock < quantity)
-            return ServiceResult<CartItemDto>.Fail($"Quantity exceeds available stock for product {productId}.", ServiceErrorType.Validation);
-
         cartItem.Quantity = quantity;
         await context.SaveChangesAsync();
 
@@ -110,9 +89,6 @@ public class CartService(AppDbContext context, IMapper mapper) : ICartService
 
     public async Task<ServiceResult<bool>> ClearCartAsync(string userId)
     {
-        if (string.IsNullOrWhiteSpace(userId))
-            return ServiceResult<bool>.Fail("Invalid user", ServiceErrorType.BadRequest);
-
         var cart = await context.Carts
             .Include(c => c.CartItems)
             .FirstOrDefaultAsync(c => c.UserId == userId);
@@ -127,9 +103,6 @@ public class CartService(AppDbContext context, IMapper mapper) : ICartService
 
     public async Task<ServiceResult<bool>> RemoveFromCartAsync(string userId, int productId)
     {
-        if (string.IsNullOrWhiteSpace(userId))
-            return ServiceResult<bool>.Fail("Invalid user", ServiceErrorType.BadRequest);
-
         var cart = await context.Carts
             .Include(c => c.CartItems)
             .FirstOrDefaultAsync(c => c.UserId == userId);

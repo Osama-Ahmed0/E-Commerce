@@ -22,7 +22,7 @@ namespace ECommerce.Controllers
             if (userId == null)
                 return Unauthorized();
 
-            var result = await service.CreateOrderAsync(userId, request.ShippingAddress);
+            var result = await service.CreateOrderAsync(userId, request);
             if (!result.Success)
                 return result.ToActionResult(this);
             return CreatedAtAction(nameof(GetOrder), new { id = result.Data!.Id }, result.Data);
@@ -61,7 +61,7 @@ namespace ECommerce.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateOrderStatus(int id, UpdateOrderStatusDto dto)
         {
-            var result = await service.UpdateOrderStatusAsync(id, dto.OrderStatus);
+            var result = await service.UpdateOrderStatusAsync(id, dto);
             return result.ToActionResult(this);
         }
 

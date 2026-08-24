@@ -4,20 +4,21 @@ using ECommerce.Dtos;
 using ECommerce.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using AutoMapper;
+using ECommerce.Services.Validation;
 
 namespace ECommerce.Services
 {
-    public class OrderService(AppDbContext context, IMapper mapper) : IOrderService
+    public class OrderService(AppDbContext context, IMapper mapper, IOrderValidator validator) : IOrderService
     {
         private readonly AppDbContext context = context;
         private readonly IMapper mapper = mapper;
+        private readonly IOrderValidator validator = validator;
 
-        public async Task<ServiceResult<OrderDto>> CreateOrderAsync(string userId, string shippingAddress)
+        public async Task<ServiceResult<OrderDto>> CreateOrderAsync(string userId, CheckoutRequestDto dto)
         {
-            if (string.IsNullOrWhiteSpace(userId))
-                return ServiceResult<OrderDto>.Fail("User id is required.", ServiceErrorType.Validation);
-            if (string.IsNullOrWhiteSpace(shippingAddress))
-                return ServiceResult<OrderDto>.Fail("Shipping address is required.", ServiceErrorType.Validation);
+            var validationResult = await validator.ValidateForCreateAsync(dto);
+            if (!validationResult.IsValid)
+                return ServiceResult<OrderDto>.Fail(validationResult.ErrorMessage!, validationResult.ErrorType);
 
             var cart = await context.Carts
                 .Include(c => c.CartItems)
@@ -44,17 +45,11 @@ namespace ECommerce.Services
             var order = new Order
             {
                 Status = OrderStatus.Pending,
-                ShippingAddress = shippingAddress,
+                ShippingAddress = dto.ShippingAddress,
                 OrderDate = DateTime.UtcNow,
                 UserId = userId,
                 TotalAmount = cart.CartItems.Sum(ci => ci.Quantity * ci.Product.Price),
-                OrderItems = cart.CartItems.Select(ci => new OrderItem
-                {
-                    ProductId = ci.ProductId,
-                    Product = ci.Product,
-                    Quantity = ci.Quantity,
-                    UnitPrice = ci.Product.Price
-                }).ToList()
+                OrderItems = cart.CartItems.Select(mapper.Map<OrderItem>).ToList()
             };
 
             await using var tx = await context.Database.BeginTransactionAsync();
@@ -83,15 +78,12 @@ namespace ECommerce.Services
                 throw;
             }
 
-            var dto = mapper.Map<OrderDto>(order);
-            return ServiceResult<OrderDto>.Ok(dto);
+            var orderDto = mapper.Map<OrderDto>(order);
+            return ServiceResult<OrderDto>.Ok(orderDto);
         }
 
         public async Task<ServiceResult<List<OrderDto>>> GetOrdersAsync(string userId)
         {
-            if (string.IsNullOrWhiteSpace(userId))
-                return ServiceResult<List<OrderDto>>.Fail("User id is required.", ServiceErrorType.Validation);
-
             var orders = await OrdersWithItems(userId).ToListAsync();
 
             var dtos = orders.Select(mapper.Map<OrderDto>).ToList();
@@ -119,13 +111,13 @@ namespace ECommerce.Services
             return ServiceResult<OrderDto>.Ok(mapper.Map<OrderDto>(order));
         }
 
-        public async Task<ServiceResult<OrderDto>> UpdateOrderStatusAsync(int orderId, string status)
+        public async Task<ServiceResult<OrderDto>> UpdateOrderStatusAsync(int orderId, UpdateOrderStatusDto dto)
         {
-            if (string.IsNullOrWhiteSpace(status))
-                return ServiceResult<OrderDto>.Fail("Status is required.", ServiceErrorType.Validation);
+            var validationResult = await validator.ValidateForUpdateStatusAsync(dto);
+            if (!validationResult.IsValid)
+                return ServiceResult<OrderDto>.Fail(validationResult.ErrorMessage!, validationResult.ErrorType);
 
-            if (!Enum.TryParse<OrderStatus>(status, true, out var requested))
-                return ServiceResult<OrderDto>.Fail("Invalid order status.", ServiceErrorType.Validation);
+            var requested = Enum.Parse<OrderStatus>(dto.OrderStatus, true);
 
             var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
             if (order == null)
@@ -179,6 +171,7 @@ namespace ECommerce.Services
             await context.SaveChangesAsync();
             return ServiceResult<bool>.Ok(true);
         }
+
         private IQueryable<Order> OrdersWithItems(string? userId = null)
         {
             var query = context.Orders

@@ -4,14 +4,16 @@ using ECommerce.Common;
 using ECommerce.Data;
 using ECommerce.Data.Models;
 using ECommerce.Dtos;
+using ECommerce.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Services
 {
-    public class ReviewService(AppDbContext context, IMapper mapper) : IReviewService
+    public class ReviewService(AppDbContext context, IMapper mapper, IReviewValidator validator) : IReviewService
     {
         private readonly AppDbContext context = context;
         private readonly IMapper mapper = mapper;
+        private readonly IReviewValidator validator = validator;
 
         public async Task<PagedResult<ReviewDto>> GetReviewsAsync(int productId, int? pageNumber, int? pageSize)
         {
@@ -41,27 +43,20 @@ namespace ECommerce.Services
             };
         }
 
-        public async Task<ServiceResult<ReviewDto>> CreateReviewAsync(int productId, string userId, WriteReviewDto Dto)
+        public async Task<ServiceResult<ReviewDto>> CreateReviewAsync(int productId, string userId, WriteReviewDto dto)
         {
-            if (Dto == null)
-                return ServiceResult<ReviewDto>.Fail("Invalid review data", ServiceErrorType.BadRequest);
-
-            var product = await context.Products.FindAsync(productId);
-            if (product == null)
-                return ServiceResult<ReviewDto>.Fail("Product not found", ServiceErrorType.NotFound);
+            var validation = await validator.ValidateForCreateAsync(productId, userId, dto);
+            if (!validation.IsValid)
+                return ServiceResult<ReviewDto>.Fail(validation.ErrorMessage!, validation.ErrorType);
 
             var user = await context.Users.FindAsync(userId);
             if (user == null)
                 return ServiceResult<ReviewDto>.Fail("User not found", ServiceErrorType.NotFound);
 
-            var already = await context.Reviews.AnyAsync(r => r.ProductId == productId && r.UserId == userId);
-            if (already)
-                return ServiceResult<ReviewDto>.Fail("User has already reviewed this product", ServiceErrorType.Conflict);
-
             var review = new Review
             {
-                Rating = Dto.Rating,
-                Comment = Dto.Comment,
+                Rating = dto.Rating,
+                Comment = dto.Comment,
                 ProductId = productId,
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow
@@ -79,9 +74,9 @@ namespace ECommerce.Services
 
             review.User = user;
 
-            var dto = mapper.Map<ReviewDto>(review);
+            var reviewDto = mapper.Map<ReviewDto>(review);
 
-            return ServiceResult<ReviewDto>.Ok(dto);
+            return ServiceResult<ReviewDto>.Ok(reviewDto);
         }
     }
 }

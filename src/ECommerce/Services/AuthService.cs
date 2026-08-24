@@ -32,11 +32,12 @@ namespace ECommerce.Services
             return result;
         }
 
-        public async Task<AuthResponseDto?> LoginAsync(UserLoginDto model)
+        public async Task<AuthResponseDto> LoginAsync(UserLoginDto model)
         {
             var user = await userManager.FindByNameAsync(model.UserName);
-            if (user == null) return null;
-            if (!await userManager.CheckPasswordAsync(user, model.Password)) return null;
+
+            if (user == null || !await userManager.CheckPasswordAsync(user, model.Password))
+                return new AuthResponseDto { IsAuthenticated = false, Message = "Invalid credentials" };
 
             var accessToken = await GenerateJwtTokenAsync(user);
             var refreshToken = GenerateRefreshToken();
@@ -57,17 +58,20 @@ namespace ECommerce.Services
             };
         }
 
-        public async Task<AuthResponseDto?> RefreshTokenAsync(string? token)
+        public async Task<AuthResponseDto> RefreshTokenAsync(string? token)
         {
-            var user = await userManager.Users.FirstOrDefaultAsync(u => u.RefreshTokens!.Any(t => t.Token == token));
+            var validationResult = await GetUserAndActiveRefreshTokenAsync(token);
+            if (validationResult.User == null || validationResult.RefreshToken == null)
+            {
+                return new AuthResponseDto
+                {
+                    IsAuthenticated = false,
+                    Message = validationResult.ErrorMessage ?? "Invalid refresh token"
+                };
+            }
 
-            if (user == null)
-                return new AuthResponseDto { IsAuthenticated = false, Message = "Invalid refresh token" };
-
-            var refreshToken = user.RefreshTokens?.FirstOrDefault(t => t.Token == token);
-
-            if (refreshToken == null || !refreshToken.IsActive)
-                return new AuthResponseDto { IsAuthenticated = false, Message = "Refresh token expired" };
+            var user = validationResult.User;
+            var refreshToken = validationResult.RefreshToken;
 
             var newAccessToken = await GenerateJwtTokenAsync(user);
             var newRefreshToken = GenerateRefreshToken();
@@ -75,7 +79,9 @@ namespace ECommerce.Services
             refreshToken.RevokedOn = DateTime.UtcNow;
 
             PruneRefreshTokens(user);
+
             user.RefreshTokens?.Add(newRefreshToken);
+
             await userManager.UpdateAsync(user);
 
             return new AuthResponseDto
@@ -90,17 +96,28 @@ namespace ECommerce.Services
             };
         }
 
-        public async Task<AuthResponseDto?> RevokeTokenAsync(string? token)
+        public async Task<AuthResponseDto> RevokeTokenAsync(string? token)
         {
-            var user = await userManager.Users.FirstOrDefaultAsync(u => u.RefreshTokens!.Any(t => t.Token == token));
-            if (user == null)
-                return null;
-            var refreshToken = user.RefreshTokens?.FirstOrDefault(t => t.Token == token);
-            if (refreshToken == null || !refreshToken.IsActive)
-                return null;
+            var validationResult = await GetUserAndActiveRefreshTokenAsync(token);
+            if (validationResult.User == null || validationResult.RefreshToken == null)
+            {
+                return new AuthResponseDto
+                {
+                    IsAuthenticated = false,
+                    Message = validationResult.ErrorMessage ?? "Invalid refresh token"
+                };
+            }
+
+            var user = validationResult.User;
+            var refreshToken = validationResult.RefreshToken;
+
             refreshToken.RevokedOn = DateTime.UtcNow;
+
+            PruneRefreshTokens(user);
+
             await userManager.UpdateAsync(user);
-            return new AuthResponseDto { Message = "Token revoked" };
+
+            return new AuthResponseDto { IsAuthenticated = false, Message = "Token revoked" };
         }
 
         private async Task<string> GenerateJwtTokenAsync(User user)
@@ -148,6 +165,23 @@ namespace ECommerce.Services
 
             var cutoff = DateTime.UtcNow.AddDays(-7);
             user.RefreshTokens.RemoveAll(t => !t.IsActive && (t.RevokedOn ?? t.ExpiresOn) < cutoff);
+        }
+        private async Task<(User? User, RefreshToken? RefreshToken, string? ErrorMessage)> GetUserAndActiveRefreshTokenAsync(string? token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+                return (null, null, "Invalid refresh token");
+
+            var user = await userManager.Users.FirstOrDefaultAsync(u => u.RefreshTokens!.Any(t => t.Token == token));
+
+            if (user == null)
+                return (null, null, "Invalid refresh token");
+
+            var refreshToken = user.RefreshTokens?.FirstOrDefault(t => t.Token == token);
+
+            if (refreshToken == null || !refreshToken.IsActive)
+                return (null, null, "Refresh token expired");
+
+            return (user, refreshToken, null);
         }
     }
 }

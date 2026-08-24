@@ -4,14 +4,16 @@ using ECommerce.Common;
 using ECommerce.Data;
 using ECommerce.Data.Models;
 using ECommerce.Dtos;
+using ECommerce.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerce.Services
 {
-    public class ProductService(AppDbContext context, IMapper mapper) : IProductService
+    public class ProductService(AppDbContext context, IMapper mapper, IProductValidator validator) : IProductService
     {
         private readonly AppDbContext context = context;
         private readonly IMapper mapper = mapper;
+        private readonly IProductValidator validator = validator;
 
         public async Task<PagedResult<ProductResponseDto>> GetProductsAsync(int? categoryId, decimal? minPrice,
             decimal? maxPrice, string? sort, int? pageNumber, int? pageSize)
@@ -67,16 +69,17 @@ namespace ECommerce.Services
 
         public async Task<ServiceResult<ProductResponseDto>> CreateProductAsync(ProductDto dto)
         {
-            var category = await context.Categories.FindAsync(dto.CategoryId);
-            if (category == null)
-                return ServiceResult<ProductResponseDto>.Fail("Category not found", ServiceErrorType.NotFound);
+            var validation = await validator.ValidateForCreateAsync(dto);
+            if (!validation.IsValid)
+                return ServiceResult<ProductResponseDto>.Fail(validation.ErrorMessage!, validation.ErrorType);
 
             var product = mapper.Map<Product>(dto);
 
             context.Products.Add(product);
             await context.SaveChangesAsync();
 
-            product.Category = category;
+            await context.Entry(product).Reference(p => p.Category).LoadAsync();
+
             return ServiceResult<ProductResponseDto>.Ok(mapper.Map<ProductResponseDto>(product));
         }
 
@@ -89,18 +92,14 @@ namespace ECommerce.Services
             if (product == null)
                 return ServiceResult<ProductResponseDto>.Fail("Product not found", ServiceErrorType.NotFound);
 
-            if (dto == null)
-                return ServiceResult<ProductResponseDto>.Fail("Invalid product data", ServiceErrorType.BadRequest);
-
-
-            if (dto.CategoryId != product.CategoryId)
-            {
-                var category = await context.Categories.FindAsync(dto.CategoryId);
-                if (category == null)
-                    return ServiceResult<ProductResponseDto>.Fail("Category not found", ServiceErrorType.NotFound);
-            }
+            var validation = await validator.ValidateForUpdateAsync(dto, product);
+            if (!validation.IsValid)
+                return ServiceResult<ProductResponseDto>.Fail(validation.ErrorMessage!, validation.ErrorType);
 
             mapper.Map(dto, product);
+
+            if (product.CategoryId != product.Category.Id)
+                await context.Entry(product).Reference(p => p.Category).LoadAsync();
 
             await context.SaveChangesAsync();
 
