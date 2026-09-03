@@ -3,6 +3,7 @@ using ECommerce.Extensions;
 using ECommerce.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace ECommerce.Controllers
 {
@@ -13,6 +14,7 @@ namespace ECommerce.Controllers
         private readonly IProductService service = service;
 
         [HttpGet]
+        [OutputCache(PolicyName = "Products")]
         public async Task<IActionResult> GetProducts([FromQuery] int? categoryId,
             [FromQuery] decimal? minPrice, [FromQuery] decimal? maxPrice,
             [FromQuery] string? sort, [FromQuery] int? pageNumber, [FromQuery] int? pageSize)

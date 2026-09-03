@@ -3,16 +3,19 @@ using ECommerce.Extensions;
 using ECommerce.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace ECommerce.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CategoryController(ICategoryService service) : ControllerBase
+    public class CategoryController(ICategoryService service, IOutputCacheStore cacheStore) : ControllerBase
     {
         private readonly ICategoryService service = service;
+        private readonly IOutputCacheStore cacheStore = cacheStore;
 
         [HttpGet]
+        [OutputCache(PolicyName = "Categories")]
         public async Task<IActionResult> GetCategories(int? pageNumber, int? pageSize)
         {
             var categories = await service.GetCategoriesAsync(pageNumber, pageSize);
@@ -20,6 +23,7 @@ namespace ECommerce.Controllers
         }
 
         [HttpGet("{id}")]
+        [OutputCache(PolicyName = "Categories")]
         public async Task<IActionResult> GetCategoryById(int id)
         {
             var result = await service.GetCategoryByIdAsync(id);
@@ -42,6 +46,12 @@ namespace ECommerce.Controllers
         public async Task<IActionResult> UpdateCategory(int id, CategoryDto dto)
         {
             var result = await service.UpdateCategoryAsync(id, dto);
+            if (!result.Success)
+                return result.ToActionResult(this);
+
+            await cacheStore.EvictByTagAsync("categories", default);
+            await cacheStore.EvictByTagAsync("products", default);
+
             return result.ToActionResult(this);
         }
 

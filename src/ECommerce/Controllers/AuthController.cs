@@ -3,6 +3,7 @@ using ECommerce.Dtos;
 using ECommerce.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ECommerce.Controllers
 {
@@ -13,6 +14,7 @@ namespace ECommerce.Controllers
         private readonly IAuthService _authService = authService;
 
         [HttpPost("register")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> Register(RegisterDto model)
         {
             var result = await _authService.RegisterAsync(model, UserRole.Customer);
@@ -21,6 +23,7 @@ namespace ECommerce.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> Login(UserLoginDto model)
         {
             var response = await _authService.LoginAsync(model);
@@ -31,6 +34,7 @@ namespace ECommerce.Controllers
         }
 
         [HttpPost("refresh")]
+        [EnableRateLimiting("auth")]
         public async Task<IActionResult> Refresh()
         {
             var token = Request.Cookies["refreshToken"];
@@ -71,7 +75,7 @@ namespace ECommerce.Controllers
                 HttpOnly = true,
                 Secure = true,
                 Expires = response.RefreshTokenExpiration,
-                SameSite = SameSiteMode.Strict
+                SameSite = SameSiteMode.Lax
             });
         }
     }

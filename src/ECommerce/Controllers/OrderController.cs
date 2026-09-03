@@ -1,6 +1,7 @@
 ﻿using ECommerce.Common;
 using ECommerce.Dtos;
 using ECommerce.Extensions;
+using ECommerce.Filters;
 using ECommerce.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,18 +40,17 @@ namespace ECommerce.Controllers
             if (userId == null)
                 return Unauthorized();
 
-            if (userRole == "Customer")
-                result = await service.GetOrdersAsync(userId);
-            else if (userRole == "Admin")
+            if (userRole == "Admin")
                 result = await service.GetOrdersAsync();
             else
-                return Forbid();
+                result = await service.GetOrdersAsync(userId);
 
             return result.ToActionResult(this);
         }
 
         [HttpGet("{id}")]
         [Authorize]
+        [ServiceFilter(typeof(OrderOwnershipFilter))]
         public async Task<IActionResult> GetOrder(int id)
         {
             var result = await service.GetOrderByIdAsync(id);
@@ -67,6 +67,7 @@ namespace ECommerce.Controllers
 
         [HttpPut("{id}/cancel")]
         [Authorize]
+        [ServiceFilter(typeof(OrderOwnershipFilter))]
         public async Task<IActionResult> CancelOrder(int id)
         {
             var result = await service.CancelOrderAsync(id);

@@ -1,26 +1,14 @@
 using ECommerce.Extensions;
-using ECommerce.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddDatabaseConfiguration(builder.Configuration);
-builder.Services.AddIdentityConfiguration();
-builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddApiConfiguration(builder.Configuration);
 builder.Services.AddApplicationServices();
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
+builder.Services.AddApiServices();
 
 var app = builder.Build();
 
-app.UseExceptionHandler();
-
-app.UseHttpsRedirection();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
+app.UseApiPipeline();
 
 await app.SeedDatabaseAsync();
 

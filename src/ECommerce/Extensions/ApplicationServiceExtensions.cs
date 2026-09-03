@@ -1,4 +1,5 @@
-﻿using ECommerce.Mapping;
+﻿using ECommerce.Filters;
+using ECommerce.Mapping;
 using ECommerce.Services;
 using ECommerce.Services.Validation;
 
@@ -26,6 +27,8 @@ namespace ECommerce.Extensions
             services.AddScoped<IReviewValidator, ReviewValidator>();
 
             services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
+
+            services.AddScoped<OrderOwnershipFilter>();
 
             return services;
         }
