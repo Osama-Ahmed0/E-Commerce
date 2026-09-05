@@ -22,7 +22,7 @@ namespace ECommerce.Mapping
             CreateMap<Product, ProductDto>();
 
             CreateMap<Category, CategoryResponseDto>()
-                .ForMember(d => d.ParentCategoryName, o => o.MapFrom(s => s.ParentCategory.Name));
+                .ForMember(d => d.ParentCategoryName, o => o.MapFrom(s => s.ParentCategory != null ? s.ParentCategory.Name : null));
             CreateMap<CategoryDto, Category>();
             CreateMap<Category, CategoryDto>();
 

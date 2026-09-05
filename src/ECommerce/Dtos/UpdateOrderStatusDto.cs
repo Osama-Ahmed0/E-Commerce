@@ -1,10 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace ECommerce.Dtos
+﻿namespace ECommerce.Dtos
 {
     public class UpdateOrderStatusDto
     {
-        [Required]
-        public string OrderStatus { get; set; } = string.Empty;
+        public required string OrderStatus { get; set; }
     }
 }

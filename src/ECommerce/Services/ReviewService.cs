@@ -56,7 +56,7 @@ namespace ECommerce.Services
             var review = new Review
             {
                 Rating = dto.Rating,
-                Comment = dto.Comment,
+                Comment = dto.Comment ?? string.Empty,
                 ProductId = productId,
                 UserId = userId,
                 CreatedAt = DateTime.UtcNow

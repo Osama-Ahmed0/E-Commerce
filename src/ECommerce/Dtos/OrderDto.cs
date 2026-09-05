@@ -7,8 +7,8 @@ namespace ECommerce.Dtos
         public int Id { get; set; }
         public OrderStatus Status { get; set; }
         public decimal TotalAmount { get; set; }
-        public string ShippingAddress { get; set; }
+        public required string ShippingAddress { get; set; }
         public DateTime CreatedAt { get; set; }
-        public IEnumerable<OrderItemDto> Items { get; set; }
+        public IEnumerable<OrderItemDto> Items { get; set; } = [];
     }
 }

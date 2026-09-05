@@ -70,6 +70,9 @@ namespace ECommerce.Services
                 return ServiceResult<CategoryResponseDto>.Fail("Category with this name already exists", ServiceErrorType.Conflict);
             }
 
+            if (category.ParentCategoryId.HasValue)
+                await context.Entry(category).Reference(c => c.ParentCategory).LoadAsync();
+
             return ServiceResult<CategoryResponseDto>.Ok(mapper.Map<CategoryResponseDto>(category));
         }
 
@@ -93,6 +96,9 @@ namespace ECommerce.Services
             {
                 return ServiceResult<CategoryResponseDto>.Fail("Category with this name already exists", ServiceErrorType.Conflict);
             }
+
+            if (category.ParentCategoryId.HasValue)
+                await context.Entry(category).Reference(c => c.ParentCategory).LoadAsync();
 
             return ServiceResult<CategoryResponseDto>.Ok(mapper.Map<CategoryResponseDto>(category));
         }
