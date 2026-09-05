@@ -13,6 +13,7 @@ namespace ECommerce.Extensions
             services.AddRateLimiting();
             services.AddApiOutputCaching();
             services.AddApiCors();
+            services.AddOpenApiExtension();
 
             return services;
         }

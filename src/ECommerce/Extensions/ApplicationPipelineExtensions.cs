@@ -6,6 +6,9 @@ namespace ECommerce.Extensions
     {
         public static WebApplication UseApiPipeline(this WebApplication app)
         {
+            // devolopment environment
+            app.UseOpenApi();
+
             app.UseExceptionHandler();
             app.UseHttpsRedirection();
             app.UseCors("Default");
