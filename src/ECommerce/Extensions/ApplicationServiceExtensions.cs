@@ -26,7 +26,7 @@ namespace ECommerce.Extensions
             services.AddScoped<IReviewService, ReviewService>();
             services.AddScoped<IReviewValidator, ReviewValidator>();
 
-            services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
+            services.AddAutoMapper(cfg => cfg.AddProfile<AutoMapperProfiles>(), typeof(AutoMapperProfiles).Assembly);
 
             services.AddScoped<OrderOwnershipFilter>();
 

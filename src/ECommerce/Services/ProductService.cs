@@ -16,7 +16,7 @@ namespace ECommerce.Services
         private readonly IProductValidator validator = validator;
 
         public async Task<PagedResult<ProductResponseDto>> GetProductsAsync(int? categoryId, decimal? minPrice,
-            decimal? maxPrice, string? sort, int? pageNumber, int? pageSize)
+            decimal? maxPrice, string? search, string? sort, int? pageNumber, int? pageSize)
         {
             var query = context.Products.AsNoTracking().AsQueryable();
 
@@ -28,6 +28,12 @@ namespace ECommerce.Services
 
             if (maxPrice.HasValue)
                 query = query.Where(p => p.Price <= maxPrice.Value);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                query = query.Where(p => p.Name.Contains(term) || p.Description.Contains(term));
+            }
 
             query = sort?.ToLowerInvariant() switch
             {

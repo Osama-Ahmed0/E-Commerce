@@ -1,4 +1,5 @@
 using ECommerce.Middleware;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 namespace ECommerce.Extensions
 {
@@ -11,6 +12,15 @@ namespace ECommerce.Extensions
 
             app.UseExceptionHandler();
             app.UseHttpsRedirection();
+            app.MapHealthChecks("/health/live", new HealthCheckOptions
+            {
+                Predicate = _ => false
+            });
+
+            app.MapHealthChecks("/health/ready", new HealthCheckOptions
+            {
+                Predicate = check => check.Tags.Contains("ready")
+            });
             app.UseCors("Default");
             app.UseRateLimiter();
             app.UseAuthentication();

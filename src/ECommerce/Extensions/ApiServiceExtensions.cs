@@ -1,3 +1,4 @@
+using ECommerce.HealthChecks;
 using ECommerce.Middleware;
 using System.Threading.RateLimiting;
 
@@ -14,6 +15,7 @@ namespace ECommerce.Extensions
             services.AddApiOutputCaching();
             services.AddApiCors();
             services.AddOpenApiExtension();
+            services.AddApiHealthChecks();
 
             return services;
         }
@@ -63,6 +65,13 @@ namespace ECommerce.Extensions
                     .AllowAnyMethod()
                     .AllowCredentials());
             });
+        }
+        private static IServiceCollection AddApiHealthChecks(this IServiceCollection services)
+        {
+            services.AddHealthChecks()
+                .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"]);
+
+            return services;
         }
     }
 }

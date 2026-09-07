@@ -6,8 +6,16 @@
         private readonly IConfiguration configuration = configuration;
         private const string ApiKeyHeaderName = "X-API-Key";
 
+        private static readonly string[] ExcludedPathPrefixes = ["/scalar", "/openapi", "/health"];
+
         public async Task InvokeAsync(HttpContext context)
         {
+            if (ExcludedPathPrefixes.Any(p => context.Request.Path.StartsWithSegments(p, StringComparison.OrdinalIgnoreCase)))
+            {
+                await next(context);
+                return;
+            }
+
             if (!context.Request.Headers.TryGetValue(ApiKeyHeaderName, out var extractedApiKey))
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;

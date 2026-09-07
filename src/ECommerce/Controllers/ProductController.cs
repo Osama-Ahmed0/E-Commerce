@@ -16,10 +16,10 @@ namespace ECommerce.Controllers
         [HttpGet]
         [OutputCache(PolicyName = "Products")]
         public async Task<IActionResult> GetProducts([FromQuery] int? categoryId,
-            [FromQuery] decimal? minPrice, [FromQuery] decimal? maxPrice,
+            [FromQuery] decimal? minPrice, [FromQuery] decimal? maxPrice, [FromQuery] string? search,
             [FromQuery] string? sort, [FromQuery] int? pageNumber, [FromQuery] int? pageSize)
         {
-            var result = await service.GetProductsAsync(categoryId, minPrice, maxPrice, sort, pageNumber, pageSize);
+            var result = await service.GetProductsAsync(categoryId, minPrice, maxPrice, search, sort, pageNumber, pageSize);
             return Ok(result);
         }
 
