@@ -23,6 +23,8 @@ namespace ECommerce.Extensions
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IOrderValidator, OrderValidator>();
 
+            services.AddScoped<IPaymentService, PaymentService>();
+
             services.AddScoped<IReviewService, ReviewService>();
             services.AddScoped<IReviewValidator, ReviewValidator>();
 

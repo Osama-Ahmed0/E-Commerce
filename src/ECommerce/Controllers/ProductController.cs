@@ -9,9 +9,10 @@ namespace ECommerce.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductController(IProductService service) : ControllerBase
+    public class ProductController(IProductService service, IOutputCacheStore cacheStore) : ControllerBase
     {
         private readonly IProductService service = service;
+        private readonly IOutputCacheStore cacheStore = cacheStore;
 
         [HttpGet]
         [OutputCache(PolicyName = "Products")]
@@ -24,6 +25,7 @@ namespace ECommerce.Controllers
         }
 
         [HttpGet("{id}")]
+        [OutputCache(PolicyName = "Products")]
         public async Task<IActionResult> GetProductById(int id)
         {
             var result = await service.GetProductByIdAsync(id);
@@ -38,6 +40,8 @@ namespace ECommerce.Controllers
             if (!result.Success)
                 return result.ToActionResult(this);
 
+            await cacheStore.EvictByTagAsync("products", default);
+
             return CreatedAtAction(nameof(GetProductById), new { id = result.Data?.Id }, result.Data);
         }
 
@@ -46,6 +50,9 @@ namespace ECommerce.Controllers
         public async Task<IActionResult> UpdateProduct(int id, ProductDto productDto)
         {
             var result = await service.UpdateProductAsync(id, productDto);
+
+            await cacheStore.EvictByTagAsync("products", default);
+
             return result.ToActionResult(this);
         }
 
@@ -54,6 +61,12 @@ namespace ECommerce.Controllers
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var result = await service.DeleteProductAsync(id);
+
+            if (!result.Success)
+                return result.ToActionResult(this);
+
+            await cacheStore.EvictByTagAsync("products", default);
+
             return result.ToActionResult(this);
         }
     }

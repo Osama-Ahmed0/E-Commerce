@@ -10,9 +10,10 @@ namespace ECommerce.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class OrderController(IOrderService service) : ControllerBase
+    public class OrderController(IOrderService service, IPaymentService paymentService) : ControllerBase
     {
         private readonly IOrderService service = service;
+        private readonly IPaymentService paymentService = paymentService;
 
         [HttpPost("checkout")]
         [Authorize]
@@ -71,6 +72,15 @@ namespace ECommerce.Controllers
         public async Task<IActionResult> CancelOrder(int id)
         {
             var result = await service.CancelOrderAsync(id);
+            return result.ToActionResult(this);
+        }
+
+        [HttpPost("{id}/payment-intent")]
+        [Authorize]
+        [ServiceFilter(typeof(OrderOwnershipFilter))]
+        public async Task<IActionResult> CreatePaymentIntent(int id)
+        {
+            var result = await paymentService.CreatePaymentIntentAsync(id);
             return result.ToActionResult(this);
         }
     }

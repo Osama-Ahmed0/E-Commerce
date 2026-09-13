@@ -6,7 +6,7 @@
         private readonly IConfiguration configuration = configuration;
         private const string ApiKeyHeaderName = "X-API-Key";
 
-        private static readonly string[] ExcludedPathPrefixes = ["/scalar", "/openapi", "/health"];
+        private static readonly string[] ExcludedPathPrefixes = ["/scalar", "/openapi", "/health", "/api/payments/webhook"];
 
         public async Task InvokeAsync(HttpContext context)
         {

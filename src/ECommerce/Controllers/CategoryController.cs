@@ -38,6 +38,9 @@ namespace ECommerce.Controllers
             if (!result.Success)
                 return result.ToActionResult(this);
 
+            await cacheStore.EvictByTagAsync("categories", default);
+            await cacheStore.EvictByTagAsync("products", default);
+
             return CreatedAtAction(nameof(GetCategoryById), new { id = result.Data?.Id }, result.Data);
         }
 
@@ -60,6 +63,11 @@ namespace ECommerce.Controllers
         public async Task<IActionResult> DeleteCategory(int id)
         {
             var result = await service.DeleteCategoryAsync(id);
+            if (!result.Success)
+                return result.ToActionResult(this);
+
+            await cacheStore.EvictByTagAsync("categories", default);
+
             return result.ToActionResult(this);
         }
     }

@@ -27,6 +27,9 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .IsRequired()
             .HasDefaultValueSql("GETDATE()");
 
+        builder.Property(o => o.StripePaymentIntentId)
+            .HasMaxLength(255);
+
         builder.HasOne(o => o.User)
             .WithMany(u => u.Orders)
             .HasForeignKey(o => o.UserId)

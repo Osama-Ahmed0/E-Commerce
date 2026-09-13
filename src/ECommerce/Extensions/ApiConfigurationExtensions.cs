@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Stripe;
 using System.Text;
 
 namespace ECommerce.Extensions
@@ -16,6 +17,7 @@ namespace ECommerce.Extensions
             services.AddDatabaseConfiguration(configuration);
             services.AddIdentityConfiguration();
             services.AddJwtAuthenticationConfiguration(configuration);
+            services.AddStripeConfiguration(configuration);
 
             return services;
         }
@@ -82,6 +84,16 @@ namespace ECommerce.Extensions
                     ClockSkew = TimeSpan.Zero
                 };
             });
+
+            return services;
+        }
+
+        public static IServiceCollection AddStripeConfiguration(this IServiceCollection services, IConfiguration configuration)
+        {
+            var stripeOptions = configuration.GetSection("Stripe").Get<StripeOptions>()
+                ?? throw new InvalidOperationException("Stripe options are not configured.");
+            services.AddSingleton(stripeOptions);
+            StripeConfiguration.ApiKey = stripeOptions.SecretKey;
 
             return services;
         }

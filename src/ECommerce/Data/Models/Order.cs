@@ -16,6 +16,7 @@ public class Order
     public decimal TotalAmount { get; set; }
     public string ShippingAddress { get; set; } = string.Empty;
     public DateTime OrderDate { get; set; }
+    public string? StripePaymentIntentId { get; set; }
 
     public string UserId { get; set; } = string.Empty;
     public User User { get; set; } = null!;
