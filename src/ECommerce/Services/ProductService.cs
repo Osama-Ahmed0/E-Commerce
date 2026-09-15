@@ -32,7 +32,7 @@ namespace ECommerce.Services
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var term = search.Trim();
-                query = query.Where(p => p.Name.Contains(term) || p.Description.Contains(term));
+                query = query.Where(p => p.Name.Contains(term, StringComparison.OrdinalIgnoreCase) || p.Description.Contains(term, StringComparison.OrdinalIgnoreCase));
             }
 
             query = sort?.ToLowerInvariant() switch
@@ -89,11 +89,11 @@ namespace ECommerce.Services
             return ServiceResult<ProductResponseDto>.Ok(mapper.Map<ProductResponseDto>(product));
         }
 
-        public async Task<ServiceResult<ProductResponseDto>> UpdateProductAsync(int id, ProductDto dto)
+        public async Task<ServiceResult<ProductResponseDto>> UpdateProductAsync(ProductDto dto)
         {
             var product = await context.Products
                 .Include(p => p.Category)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id == dto.Id);
 
             if (product == null)
                 return ServiceResult<ProductResponseDto>.Fail("Product not found", ServiceErrorType.NotFound);

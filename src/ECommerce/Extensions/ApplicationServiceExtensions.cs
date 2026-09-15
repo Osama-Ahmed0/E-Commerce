@@ -24,6 +24,7 @@ namespace ECommerce.Extensions
             services.AddScoped<IOrderValidator, OrderValidator>();
 
             services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<IStripeWebhookEventParser, StripeWebhookEventParser>();
 
             services.AddScoped<IReviewService, ReviewService>();
             services.AddScoped<IReviewValidator, ReviewValidator>();

@@ -16,6 +16,16 @@ namespace ECommerce.Mapping
             CreateMap<Order, OrderDto>()
                 .ForMember(d => d.CreatedAt, o => o.MapFrom(s => s.OrderDate))
                 .ForMember(d => d.Items, o => o.MapFrom(s => s.OrderItems));
+            CreateMap<OrderItem, OrderItemDto>()
+                .ForMember(d => d.ProductName, o => o.MapFrom(s => s.Product.Name))
+                .ForMember(d => d.UnitPriceAtPurchase, o => o.MapFrom(s => s.UnitPrice));
+
+            CreateMap<CartItem, OrderItem>()
+                .ForMember(d => d.UnitPrice, o => o.MapFrom(s => s.Product.Price));
+
+            CreateMap<Order, OrderDto>()
+                .ForMember(d => d.CreatedAt, o => o.MapFrom(s => s.OrderDate))
+                .ForMember(d => d.Items, o => o.MapFrom(s => s.OrderItems));
 
             CreateMap<Product, ProductResponseDto>()
                 .ForMember(d => d.CategoryName, o => o.MapFrom(s => s.Category.Name));

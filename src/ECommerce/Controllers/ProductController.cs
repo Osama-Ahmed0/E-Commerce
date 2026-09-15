@@ -46,10 +46,10 @@ namespace ECommerce.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProduct(int id, ProductDto productDto)
+        [HttpPut]
+        public async Task<IActionResult> UpdateProduct(ProductDto productDto)
         {
-            var result = await service.UpdateProductAsync(id, productDto);
+            var result = await service.UpdateProductAsync(productDto);
 
             await cacheStore.EvictByTagAsync("products", default);
 

@@ -76,13 +76,13 @@ namespace ECommerce.Services
             return ServiceResult<CategoryResponseDto>.Ok(mapper.Map<CategoryResponseDto>(category));
         }
 
-        public async Task<ServiceResult<CategoryResponseDto>> UpdateCategoryAsync(int id, CategoryDto dto)
+        public async Task<ServiceResult<CategoryResponseDto>> UpdateCategoryAsync(CategoryDto dto)
         {
-            var category = await context.Categories.FindAsync(id);
+            var category = await context.Categories.FindAsync(dto.Id);
             if (category == null)
                 return ServiceResult<CategoryResponseDto>.Fail("Category not found", ServiceErrorType.NotFound);
 
-            var validation = await validator.ValidateForUpdateAsync(id, dto);
+            var validation = await validator.ValidateForUpdateAsync(dto);
             if (!validation.IsValid)
                 return ServiceResult<CategoryResponseDto>.Fail(validation.ErrorMessage!, validation.ErrorType);
 

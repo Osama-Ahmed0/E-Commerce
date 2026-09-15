@@ -9,12 +9,18 @@ using Stripe;
 
 namespace ECommerce.Services
 {
-    public class PaymentService(AppDbContext context, StripeOptions stripeOptions, ILogger<PaymentService> logger, IOutputCacheStore cacheStore) : IPaymentService
+    public class PaymentService(
+        AppDbContext context,
+        StripeOptions stripeOptions,
+        ILogger<PaymentService> logger,
+        IOutputCacheStore cacheStore,
+        IStripeWebhookEventParser eventParser) : IPaymentService
     {
         private readonly AppDbContext context = context;
         private readonly StripeOptions stripeOptions = stripeOptions;
         private readonly ILogger<PaymentService> logger = logger;
         private readonly IOutputCacheStore cacheStore = cacheStore;
+        private readonly IStripeWebhookEventParser eventParser = eventParser;
 
         public async Task<ServiceResult<PaymentIntentResponseDto>> CreatePaymentIntentAsync(int orderId)
         {
@@ -72,7 +78,7 @@ namespace ECommerce.Services
 
             try
             {
-                stripeEvent = EventUtility.ConstructEvent(json, signatureHeader, stripeOptions.WebhookSecret);
+                stripeEvent = eventParser.ConstructEvent(json, signatureHeader, stripeOptions.WebhookSecret!);
             }
             catch (StripeException ex)
             {

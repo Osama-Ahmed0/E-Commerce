@@ -11,7 +11,7 @@ namespace ECommerce.Services.Validation
 
         public async Task<ValidationResult> ValidateForCreateAsync(CategoryDto dto)
         {
-            if (await NameExistsAsync(dto.Name, dto.ParentCategoryId))
+            if (await NameExistsAsync(dto.Name, dto.ParentCategoryId, dto.Id))
                 return ValidationResult.Invalid("Category with this name already exists", ServiceErrorType.Conflict);
 
             if (dto.ParentCategoryId.HasValue && !await ParentCategoryExistsAsync(dto.ParentCategoryId.Value))
@@ -20,14 +20,14 @@ namespace ECommerce.Services.Validation
             return ValidationResult.Valid();
         }
 
-        public async Task<ValidationResult> ValidateForUpdateAsync(int id, CategoryDto dto)
+        public async Task<ValidationResult> ValidateForUpdateAsync(CategoryDto dto)
         {
-            if (await NameExistsAsync(dto.Name, dto.ParentCategoryId, excludeId: id))
+            if (await NameExistsAsync(dto.Name, dto.ParentCategoryId, dto.Id))
                 return ValidationResult.Invalid("Category with this name already exists", ServiceErrorType.Conflict);
 
             if (dto.ParentCategoryId.HasValue)
             {
-                if (dto.ParentCategoryId.Value == id)
+                if (dto.ParentCategoryId.Value == dto.Id)
                     return ValidationResult.Invalid("Invalid parent category", ServiceErrorType.BadRequest);
 
                 if (!await ParentCategoryExistsAsync(dto.ParentCategoryId.Value))
@@ -37,15 +37,8 @@ namespace ECommerce.Services.Validation
             return ValidationResult.Valid();
         }
 
-        private async Task<bool> NameExistsAsync(string name, int? parentCategoryId, int? excludeId = null)
-        {
-            var query = context.Categories.Where(c => c.Name == name && c.ParentCategoryId == parentCategoryId);
-
-            if (excludeId.HasValue)
-                query = query.Where(c => c.Id != excludeId.Value);
-
-            return await query.AnyAsync();
-        }
+        private async Task<bool> NameExistsAsync(string name, int? parentCategoryId, int id) =>
+            await context.Categories.AnyAsync(c => c.Name == name && c.ParentCategoryId == parentCategoryId && c.Id != id);
 
         private async Task<bool> ParentCategoryExistsAsync(int parentCategoryId) =>
             await context.Categories.AnyAsync(c => c.Id == parentCategoryId);

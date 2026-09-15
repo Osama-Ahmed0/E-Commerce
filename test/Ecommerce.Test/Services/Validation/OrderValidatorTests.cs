@@ -2,7 +2,7 @@
 using ECommerce.Dtos;
 using ECommerce.Services.Validation;
 
-namespace Ecommerce.Test.Services.Validation
+namespace ECommerce.Tests.Services.Validation
 {
     public class OrderValidatorTests
     {

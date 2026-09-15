@@ -3,7 +3,7 @@ using ECommerce.Data.Models;
 using ECommerce.Dtos;
 using ECommerce.Services.Validation;
 
-namespace Ecommerce.Test.Services.Validation
+namespace ECommerce.Tests.Services.Validation
 {
     public class CartValidatorTests
     {
@@ -73,7 +73,7 @@ namespace Ecommerce.Test.Services.Validation
                 Stock = 10
             });
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new CartValidator(context);
 
@@ -108,7 +108,7 @@ namespace Ecommerce.Test.Services.Validation
                 Stock = 10
             });
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new CartValidator(context);
 
@@ -189,7 +189,7 @@ namespace Ecommerce.Test.Services.Validation
                 Stock = 10
             });
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new CartValidator(context);
 
@@ -222,7 +222,7 @@ namespace Ecommerce.Test.Services.Validation
                 Stock = 10
             });
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new CartValidator(context);
 

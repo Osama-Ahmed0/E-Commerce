@@ -1,4 +1,4 @@
 <Solution>
   <Project Path="src/ECommerce/ECommerce.csproj" Id="5d737dd0-6626-4ee2-922b-4c7dc4000350" />
-  <Project Path="test/Ecommerce.Test/Ecommerce.Test.csproj" Id="817afbf3-27e0-436f-a0d2-cc9527b95f68" />
+  <Project Path="test/Ecommerce.Test/ECommerce.Tests.csproj" Id="817afbf3-27e0-436f-a0d2-cc9527b95f68" />
 </Solution>

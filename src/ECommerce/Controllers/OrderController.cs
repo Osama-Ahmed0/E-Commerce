@@ -10,10 +10,11 @@ namespace ECommerce.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class OrderController(IOrderService service, IPaymentService paymentService) : ControllerBase
+    public class OrderController(IOrderService service, IPaymentService paymentService, ILogger<OrderController> logger) : ControllerBase
     {
         private readonly IOrderService service = service;
         private readonly IPaymentService paymentService = paymentService;
+        private readonly ILogger<OrderController> logger = logger;
 
         [HttpPost("checkout")]
         [Authorize]

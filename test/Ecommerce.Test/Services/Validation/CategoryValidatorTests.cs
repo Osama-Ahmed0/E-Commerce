@@ -3,7 +3,7 @@ using ECommerce.Data.Models;
 using ECommerce.Dtos;
 using ECommerce.Services.Validation;
 
-namespace Ecommerce.Test.Services.Validation
+namespace ECommerce.Tests.Services.Validation
 {
     public class CategoryValidatorTests
     {
@@ -36,7 +36,7 @@ namespace Ecommerce.Test.Services.Validation
             using var context = new InMemoryDbContext();
 
             context.Categories.Add(new Category { Id = 1, Name = "Phones", ParentCategoryId = null });
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new CategoryValidator(context);
 
@@ -64,7 +64,7 @@ namespace Ecommerce.Test.Services.Validation
             context.Categories.Add(new Category { Id = 1, Name = "Phones", ParentCategoryId = null });
             context.Categories.Add(new Category { Id = 2, Name = "Electronics", ParentCategoryId = null });
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new CategoryValidator(context);
 
@@ -139,18 +139,19 @@ namespace Ecommerce.Test.Services.Validation
             using var context = new InMemoryDbContext();
 
             context.Categories.Add(new Category { Id = 1, Name = "Electronics", ParentCategoryId = null });
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new CategoryValidator(context);
 
             var dto = new CategoryDto
             {
+                Id = 1,
                 Name = "Electronics",
                 ParentCategoryId = null
             };
 
             // Act
-            var result = await validator.ValidateForUpdateAsync(1, dto);
+            var result = await validator.ValidateForUpdateAsync(dto);
 
             // Assert
             Assert.True(result.IsValid);
@@ -166,18 +167,19 @@ namespace Ecommerce.Test.Services.Validation
             context.Categories.Add(new Category { Id = 1, Name = "Electronics", ParentCategoryId = null });
             context.Categories.Add(new Category { Id = 2, Name = "Phones", ParentCategoryId = null });
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new CategoryValidator(context);
 
             var dto = new CategoryDto
             {
+                Id = 1,
                 Name = "Phones",
                 ParentCategoryId = null
             };
 
             // Act
-            var result = await validator.ValidateForUpdateAsync(1, dto);
+            var result = await validator.ValidateForUpdateAsync(dto);
 
             // Assert
             Assert.False(result.IsValid);
@@ -192,18 +194,19 @@ namespace Ecommerce.Test.Services.Validation
             using var context = new InMemoryDbContext();
 
             context.Categories.Add(new Category { Id = 1, Name = "Electronics", ParentCategoryId = null });
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new CategoryValidator(context);
 
             var dto = new CategoryDto
             {
+                Id = 1,
                 Name = "Electronics",
                 ParentCategoryId = 1
             };
 
             // Act
-            var result = await validator.ValidateForUpdateAsync(1, dto);
+            var result = await validator.ValidateForUpdateAsync(dto);
 
             // Assert
             Assert.False(result.IsValid);
@@ -218,18 +221,19 @@ namespace Ecommerce.Test.Services.Validation
             using var context = new InMemoryDbContext();
 
             context.Categories.Add(new Category { Id = 1, Name = "Electronics", ParentCategoryId = null });
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new CategoryValidator(context);
 
             var dto = new CategoryDto
             {
+                Id = 1,
                 Name = "Phones",
                 ParentCategoryId = 999
             };
 
             // Act
-            var result = await validator.ValidateForUpdateAsync(1, dto);
+            var result = await validator.ValidateForUpdateAsync(dto);
 
             // Assert
             Assert.False(result.IsValid);
@@ -245,7 +249,7 @@ namespace Ecommerce.Test.Services.Validation
 
             context.Categories.Add(new Category { Id = 1, Name = "Electronics", ParentCategoryId = null });
             context.Categories.Add(new Category { Id = 2, Name = "Phones", ParentCategoryId = null });
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new CategoryValidator(context);
 
@@ -256,7 +260,7 @@ namespace Ecommerce.Test.Services.Validation
             };
 
             // Act
-            var result = await validator.ValidateForUpdateAsync(2, dto);
+            var result = await validator.ValidateForUpdateAsync(dto);
 
             // Assert
             Assert.True(result.IsValid);
@@ -272,18 +276,19 @@ namespace Ecommerce.Test.Services.Validation
             context.Categories.Add(new Category { Id = 1, Name = "Electronics", ParentCategoryId = null });
             context.Categories.Add(new Category { Id = 2, Name = "Phones", ParentCategoryId = 1 });
             context.Categories.Add(new Category { Id = 3, Name = "Clothes", ParentCategoryId = null });
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new CategoryValidator(context);
 
             var dto = new CategoryDto
             {
+                Id = 2,
                 Name = "Phones",
                 ParentCategoryId = 3
             };
 
             // Act
-            var result = await validator.ValidateForUpdateAsync(2, dto);
+            var result = await validator.ValidateForUpdateAsync(dto);
 
             // Assert
             Assert.True(result.IsValid);

@@ -1,7 +1,8 @@
 ﻿using ECommerce.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
-namespace Ecommerce.Test
+namespace ECommerce.Tests
 {
     internal class InMemoryDbContext() : AppDbContext(CreateInMemoryOptions())
     {
@@ -9,6 +10,7 @@ namespace Ecommerce.Test
         {
             return new DbContextOptionsBuilder<AppDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
                 .Options;
         }
 

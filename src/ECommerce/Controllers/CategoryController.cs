@@ -45,10 +45,10 @@ namespace ECommerce.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCategory(int id, CategoryDto dto)
+        [HttpPut]
+        public async Task<IActionResult> UpdateCategory(CategoryDto dto)
         {
-            var result = await service.UpdateCategoryAsync(id, dto);
+            var result = await service.UpdateCategoryAsync(dto);
             if (!result.Success)
                 return result.ToActionResult(this);
 

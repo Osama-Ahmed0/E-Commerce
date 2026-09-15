@@ -3,7 +3,7 @@ using ECommerce.Data.Models;
 using ECommerce.Dtos;
 using ECommerce.Services.Validation;
 
-namespace Ecommerce.Test.Services.Validation
+namespace ECommerce.Tests.Services.Validation
 {
     public class ProductValidatorTests
     {
@@ -22,7 +22,7 @@ namespace Ecommerce.Test.Services.Validation
                 Id = categoryId
             });
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new ProductValidator(context);
 
@@ -117,7 +117,7 @@ namespace Ecommerce.Test.Services.Validation
                 Id = newCategoryId
             });
 
-            await context.SaveChangesAsync();
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
             var validator = new ProductValidator(context);
 
